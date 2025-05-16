@@ -552,9 +552,11 @@ spec:
     emptyDisk:
       capacity: "0"
     ephemeral:
+      path: pathValue
       persistentVolumeClaim:
         claimName: claimNameValue
         readOnly: true
+      type: typeValue
     hostDisk:
       capacity: "0"
       path: pathValue

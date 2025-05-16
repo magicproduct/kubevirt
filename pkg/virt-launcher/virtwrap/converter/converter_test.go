@@ -1134,7 +1134,7 @@ var _ = Describe("Converter", func() {
 
 		It("should generate the block backingstore disk within the domain", func() {
 			vmi = libvmi.New(
-				libvmi.WithEphemeralPersistentVolumeClaim(blockPVCName, "test-ephemeral"),
+				libvmi.WithEphemeralPersistentVolumeClaim(blockPVCName, "test-ephemeral", "", ""),
 			)
 
 			domain := vmiToDomain(vmi, &ConverterContext{Architecture: archconverter.NewConverter(runtime.GOARCH), AllowEmulation: true, EphemeraldiskCreator: EphemeralDiskImageCreator, IsBlockPVC: isBlockPVCMap, IsBlockDV: isBlockDVMap})

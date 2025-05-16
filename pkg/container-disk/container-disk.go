@@ -370,7 +370,7 @@ func CreateEphemeralImages(
 			} else if !exists {
 				return fmt.Errorf("no supported file disk found for volume found in: %s", backingFile)
 			}
-			if err := diskCreator.CreateBackedImageForVolume(volume, backingFile, info.Format); err != nil {
+			if err := diskCreator.CreateBackedImageForVolume(volume, backingFile, volume.VolumeSource.Ephemeral.Type); err != nil {
 				return err
 			}
 		}

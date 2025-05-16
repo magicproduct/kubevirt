@@ -898,6 +898,8 @@ type EphemeralVolumeSource struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
 	PersistentVolumeClaim *v1.PersistentVolumeClaimVolumeSource `json:"persistentVolumeClaim,omitempty"`
+	Type                  string                                `json:"type,omitempty"`
+	ImagePath             string                                `json:"path,omitempty"`
 }
 
 // EmptyDisk represents a temporary disk which shares the vmis lifecycle.
