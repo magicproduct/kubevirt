@@ -385,7 +385,7 @@ func CreateEphemeralImages(
 			}
 			if backingFile, err := GetDiskTargetPartFromLauncherView(i); err != nil {
 				return err
-			} else if err := diskCreator.CreateBackedImageForVolume(volume, backingFile, info.Format); err != nil {
+			} else if err := diskCreator.CreateBackedImageForVolume(volume, backingFile, volume.VolumeSource.Ephemeral.Type); err != nil {
 				return err
 			}
 		}

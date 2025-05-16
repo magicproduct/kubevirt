@@ -128,7 +128,7 @@ func NewWindows(opts ...libvmi.Option) *kvirtv1.VirtualMachineInstance {
 		libvmi.WithTerminationGracePeriod(0),
 		libvmi.WithCPUCount(cpuCount, cpuCount, cpuCount),
 		libvmi.WithResourceMemory("2048Mi"),
-		libvmi.WithEphemeralPersistentVolumeClaim(windowsDiskName, WindowsPVCName),
+		libvmi.WithEphemeralPersistentVolumeClaim(windowsDiskName, WindowsPVCName, "", ""),
 	}
 
 	windowsOpts = append(windowsOpts, opts...)

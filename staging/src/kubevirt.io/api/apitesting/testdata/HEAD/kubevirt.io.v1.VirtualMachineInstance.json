@@ -701,7 +701,9 @@
           "persistentVolumeClaim": {
             "claimName": "claimNameValue",
             "readOnly": true
-          }
+          },
+          "type": "typeValue",
+          "path": "pathValue"
         },
         "emptyDisk": {
           "capacity": "0"

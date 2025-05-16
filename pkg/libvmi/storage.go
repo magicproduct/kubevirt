@@ -59,10 +59,10 @@ func WithPersistentVolumeClaim(diskName, pvcName string) Option {
 }
 
 // WithEphemeralPersistentVolumeClaim specifies the name of the Ephemeral.PersistentVolumeClaim to be used.
-func WithEphemeralPersistentVolumeClaim(diskName, pvcName string) Option {
+func WithEphemeralPersistentVolumeClaim(diskName, pvcName string, imageType string, imagePath string) Option {
 	return func(vmi *v1.VirtualMachineInstance) {
 		addDisk(vmi, newDisk(diskName, v1.DiskBusSATA))
-		addVolume(vmi, newEphemeralPersistentVolumeClaimVolume(diskName, pvcName))
+		addVolume(vmi, newEphemeralPersistentVolumeClaimVolume(diskName, pvcName, imageType, imagePath))
 	}
 }
 
@@ -276,7 +276,7 @@ func newPersistentVolumeClaimVolume(name, claimName string) v1.Volume {
 	}
 }
 
-func newEphemeralPersistentVolumeClaimVolume(name, claimName string) v1.Volume {
+func newEphemeralPersistentVolumeClaimVolume(name, claimName string, imageType string, imagePath string) v1.Volume {
 	return v1.Volume{
 		Name: name,
 		VolumeSource: v1.VolumeSource{
@@ -284,6 +284,8 @@ func newEphemeralPersistentVolumeClaimVolume(name, claimName string) v1.Volume {
 				PersistentVolumeClaim: &k8sv1.PersistentVolumeClaimVolumeSource{
 					ClaimName: claimName,
 				},
+				Type:      imageType,
+				ImagePath: imagePath,
 			},
 		},
 	}

@@ -450,7 +450,7 @@ var _ = SIGDescribe("Storage", func() {
 
 					vmi = libvmi.New(
 						libvmi.WithResourceMemory("256Mi"),
-						libvmi.WithEphemeralPersistentVolumeClaim("disk0", pvName),
+						libvmi.WithEphemeralPersistentVolumeClaim("disk0", pvName, "", ""),
 					)
 
 					if storageEngine == "nfs" {
@@ -473,7 +473,7 @@ var _ = SIGDescribe("Storage", func() {
 				vmi = libvmi.New(
 					libvmi.WithNamespace(testsuite.GetTestNamespace(nil)),
 					libvmi.WithResourceMemory("256Mi"),
-					libvmi.WithEphemeralPersistentVolumeClaim("disk0", diskAlpineHostPath),
+					libvmi.WithEphemeralPersistentVolumeClaim("disk0", diskAlpineHostPath, "", ""),
 				)
 
 				By("Starting the VirtualMachineInstance")
@@ -1133,7 +1133,7 @@ var _ = SIGDescribe("Storage", func() {
 
 			It("should generate the pod with the volumeDevice", func() {
 				vmi = libvmifact.NewGuestless(
-					libvmi.WithEphemeralPersistentVolumeClaim("disk0", dataVolume.Name),
+					libvmi.WithEphemeralPersistentVolumeClaim("disk0", dataVolume.Name, "", ""),
 				)
 
 				By("Initializing the VM")

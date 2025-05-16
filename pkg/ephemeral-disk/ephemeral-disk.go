@@ -33,10 +33,17 @@ import (
 	"kubevirt.io/kubevirt/pkg/virt-launcher/virtwrap/api"
 )
 
+type ephemeralDiskFormat string
+
+const (
+	ephemeralDiskFormatRAW   ephemeralDiskFormat = "raw"
+	ephemeralDiskFormatQCow2 ephemeralDiskFormat = "qcow2"
+)
+
 const (
 	ephemeralDiskPVCBaseDir         = "/var/run/kubevirt-private/vmi-disks"
 	ephemeralDiskBlockDeviceBaseDir = "/dev"
-	ephemeralDiskFormat             = "raw"
+	ephemeralDiskPath               = "image.img"
 )
 
 type EphemeralDiskCreatorInterface interface {
@@ -50,7 +57,20 @@ type ephemeralDiskCreator struct {
 	mountBaseDir    string
 	pvcBaseDir      string
 	blockDevBaseDir string
-	discCreateFunc  func(backingFile string, backingFormat string, imagePath string) ([]byte, error)
+	discCreateFunc  func(backingFile string, backingFormat ephemeralDiskFormat, imagePath string) ([]byte, error)
+}
+
+func parseBackingDiskFormat(diskFormat string) (ephemeralDiskFormat, error) {
+	switch diskFormat {
+	case "":
+		return ephemeralDiskFormatRAW, nil
+	case "raw":
+		return ephemeralDiskFormatRAW, nil
+	case "qcow2":
+		return ephemeralDiskFormatQCow2, nil
+	default:
+		return ephemeralDiskFormatRAW, fmt.Errorf("unknown image type '%s'", diskFormat)
+	}
 }
 
 func NewEphemeralDiskCreator(mountBaseDir string) *ephemeralDiskCreator {
@@ -70,10 +90,16 @@ func (c *ephemeralDiskCreator) generateVolumeMountDir(volumeName string) string 
 	return filepath.Join(c.mountBaseDir, volumeName)
 }
 
-func (c *ephemeralDiskCreator) getBackingFilePath(volumeName string, isBlockVolume bool) string {
+func (c *ephemeralDiskCreator) getBackingFilePath(volumeName string, altPath string, isBlockVolume bool) string {
 	if isBlockVolume {
 		return filepath.Join(c.blockDevBaseDir, volumeName)
 	}
+
+	// User specified a different image path
+	if altPath != "" {
+		return filepath.Join(c.pvcBaseDir, volumeName, altPath)
+	}
+
 	return filepath.Join(c.pvcBaseDir, volumeName, "disk.img")
 }
 
@@ -107,7 +133,12 @@ func (c *ephemeralDiskCreator) CreateBackedImageForVolume(volume v1.Volume, back
 		return err
 	}
 
-	output, err := c.discCreateFunc(backingFile, backingFormat, imagePath)
+	backingDiskFormat, err := parseBackingDiskFormat(backingFormat)
+	if err != nil {
+		return err
+	}
+
+	output, err := c.discCreateFunc(backingFile, backingDiskFormat, imagePath)
 
 	// Cleanup of previous images isn't really necessary as they're all on EmptyDir.
 	if err != nil {
@@ -131,7 +162,8 @@ func (c *ephemeralDiskCreator) CreateEphemeralImages(vmi *v1.VirtualMachineInsta
 	isBlockVolumes := diskutils.GetEphemeralBackingSourceBlockDevices(domain)
 	for _, volume := range vmi.Spec.Volumes {
 		if volume.VolumeSource.Ephemeral != nil {
-			if err := c.CreateBackedImageForVolume(volume, c.getBackingFilePath(volume.Name, isBlockVolumes[volume.Name]), ephemeralDiskFormat); err != nil {
+			backingFilePath := c.getBackingFilePath(volume.Name, volume.VolumeSource.Ephemeral.ImagePath, isBlockVolumes[volume.Name])
+			if err := c.CreateBackedImageForVolume(volume, backingFilePath, volume.VolumeSource.Ephemeral.Type); err != nil {
 				return err
 			}
 		}
@@ -140,8 +172,8 @@ func (c *ephemeralDiskCreator) CreateEphemeralImages(vmi *v1.VirtualMachineInsta
 	return nil
 }
 
-func createBackingDisk(backingFile string, backingFormat string, imagePath string) ([]byte, error) {
-	// #nosec No risk for attacket injection. Parameters are predefined strings
+func createBackingDisk(backingFile string, backingFormat ephemeralDiskFormat, imagePath string) ([]byte, error) {
+	// #nosec No risk for attacker injection. Parameters are predefined strings
 	cmd := exec.Command("qemu-img",
 		"create",
 		"-f",
@@ -149,7 +181,7 @@ func createBackingDisk(backingFile string, backingFormat string, imagePath strin
 		"-b",
 		backingFile,
 		"-F",
-		backingFormat,
+		string(backingFormat),
 		imagePath,
 	)
 	return cmd.CombinedOutput()
